@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+# Pre-commit: review gate first, then deterministic checks (when they exist).
+set -eu
+
+sh scripts/commit-gate.sh check
+
+if [ -f package.json ]; then
+  npm run -s typecheck --if-present
+  npm run -s lint --if-present
+  npm run -s test --if-present
+fi
