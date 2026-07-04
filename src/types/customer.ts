@@ -40,6 +40,9 @@ export const CustomerRecordSchema = z.object({
   region: RegionSchema,
   signup_date: z.string().date(),
   open_ticket_id: z.string().nullable(),
+  // intent of that ticket, synced at context load — lets the pure policy
+  // engine dedup without I/O (SPEC §5 ticket-dedup rule)
+  open_ticket_intent: z.string().nullable(),
   recent_disputes: z.number().int().nonnegative(),
   // deterministic-only fields — never interpolated into prompts:
   transactions: z.array(TransactionSchema),

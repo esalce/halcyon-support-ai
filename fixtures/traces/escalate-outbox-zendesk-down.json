@@ -13,7 +13,8 @@
     "intent": "card_declined",
     "topic": "card_declined",
     "region_detected": "US",
-    "confidence": 0.58
+    "confidence": 0.58,
+    "entities": {}
   },
   "context_injected": [],
   "kb": null,
@@ -41,9 +42,9 @@
       "reason": "topic 'card_declined' has a KB route"
     },
     {
-      "rule": "confidence_gate",
+      "rule": "classification_confidence_gate",
       "fired": true,
-      "reason": "classification_confidence 0.58 < 0.75 — escalating instead of answering"
+      "reason": "classification_confidence 0.58 < 0.75 — evaluate() terminates with escalation before retrieval"
     }
   ],
   "action": "ESCALATE_CREATE_TICKET",

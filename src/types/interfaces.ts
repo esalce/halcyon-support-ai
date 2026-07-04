@@ -1,8 +1,8 @@
-import type { Action } from './action.js';
 import type { Classification, ConfidenceSignals } from './classification.js';
 import type { Chunk, Msg, OutageStatus } from './context.js';
 import type { CustomerRecord } from './customer.js';
-import type { RuleResult, TicketPayload } from './ticket.js';
+import type { FinalDecision, PreDecision } from './policy.js';
+import type { TicketPayload } from './ticket.js';
 
 /**
  * SPEC §3.4 — WS-D implements; everyone else consumes. A thin seam, not a
@@ -28,26 +28,21 @@ export interface Zendesk {
   available: boolean;
 }
 
-export interface PolicyInput {
-  customer: CustomerRecord;
-  classification: Classification;
-  confidence: ConfidenceSignals;
-  kbMatch: boolean;
-  outage: OutageStatus;
-}
-
-export interface PolicyDecision {
-  action: Action;
-  rules: RuleResult[];
-  template_id?: string;
-  /** Scoped enrichment keys the LLM may see, fetched by deterministic code (SPEC §5). */
-  contextRequests: string[];
-}
-
 /**
  * SPEC §3.4 — WS-C implements. Pure functions only: no I/O, no LLM, no mock
- * imports. Actions execute from this decision, never from LLM output.
+ * imports. Two-phase, because retrieval_strength and groundedness_pass don't
+ * exist until after retrieval + drafting: evaluate() rules on everything
+ * knowable pre-retrieval and either terminates or returns ATTEMPT_ANSWER;
+ * finalize() applies the remaining confidence gates to the completed draft.
+ * The orchestrator owns the I/O between them, and actions execute only from
+ * these decisions, never from LLM output.
  */
 export interface PolicyEngine {
-  evaluate(input: PolicyInput): PolicyDecision;
+  evaluate(input: {
+    customer: CustomerRecord;
+    classification: Classification;
+    kbMatch: boolean;
+    outage: OutageStatus;
+  }): PreDecision;
+  finalize(pre: PreDecision, confidence: ConfidenceSignals): FinalDecision;
 }

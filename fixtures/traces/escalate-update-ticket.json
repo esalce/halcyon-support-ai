@@ -13,7 +13,8 @@
     "intent": "billing_dispute",
     "topic": "reg_e_dispute",
     "region_detected": "US",
-    "confidence": 0.9
+    "confidence": 0.9,
+    "entities": {}
   },
   "context_injected": [],
   "kb": null,
@@ -27,7 +28,7 @@
     {
       "rule": "ticket_dedup",
       "fired": true,
-      "reason": "intent 'billing_dispute' matches open ticket ZD-1042 — appending as internal note instead of creating a duplicate"
+      "reason": "classification.intent 'billing_dispute' === customer.open_ticket_intent (ticket ZD-1042) — appending as internal note instead of creating a duplicate"
     },
     {
       "rule": "vip_billing_dispute",
@@ -45,9 +46,9 @@
       "reason": "not reached: escalation decided before retrieval"
     },
     {
-      "rule": "confidence_gate",
+      "rule": "classification_confidence_gate",
       "fired": false,
-      "reason": "classification 0.90 >= 0.75; retrieval and groundedness not reached"
+      "reason": "classification 0.90 >= 0.75"
     }
   ],
   "action": "ESCALATE_UPDATE_TICKET",

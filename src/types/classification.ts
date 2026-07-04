@@ -59,6 +59,13 @@ export const ClassificationSchema = z.object({
   topic: TopicSchema,
   region_detected: z.enum(['US', 'UK', 'unknown']),
   confidence: z.number().min(0).max(1),
+  // extracted references, resolved deterministically against
+  // customer.transactions by the §5 refund-target matcher — never by the LLM
+  entities: z.object({
+    merchant: z.string().optional(),
+    amount: z.number().optional(),
+    approx_date: z.string().optional(),
+  }),
 });
 export type Classification = z.infer<typeof ClassificationSchema>;
 

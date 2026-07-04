@@ -13,7 +13,8 @@
     "intent": "billing_dispute",
     "topic": "reg_e_dispute",
     "region_detected": "US",
-    "confidence": 0.93
+    "confidence": 0.93,
+    "entities": {}
   },
   "context_injected": ["last_disputed_txn"],
   "kb": null,
@@ -41,9 +42,9 @@
       "reason": "not reached: escalation decided before retrieval"
     },
     {
-      "rule": "confidence_gate",
+      "rule": "classification_confidence_gate",
       "fired": false,
-      "reason": "classification 0.93 >= 0.75; retrieval and groundedness not reached"
+      "reason": "classification 0.93 >= 0.75"
     }
   ],
   "action": "ESCALATE_WITH_APPROVED_RESPONSE",

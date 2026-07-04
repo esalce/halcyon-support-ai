@@ -7,5 +7,6 @@ export * from './classification.js';
 export * from './context.js';
 export * from './customer.js';
 export * from './interfaces.js';
+export * from './policy.js';
 export * from './ticket.js';
 export * from './trace.js';

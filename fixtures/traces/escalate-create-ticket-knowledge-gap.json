@@ -13,7 +13,8 @@
     "intent": "crypto_question",
     "topic": "crypto",
     "region_detected": "US",
-    "confidence": 0.91
+    "confidence": 0.91,
+    "entities": {}
   },
   "context_injected": [],
   "kb": {
@@ -45,9 +46,9 @@
       "reason": "topic 'crypto' has no entry in the topic-routing table — escalating with full context"
     },
     {
-      "rule": "confidence_gate",
+      "rule": "classification_confidence_gate",
       "fired": false,
-      "reason": "classification 0.91 >= 0.75; retrieval and groundedness not reached"
+      "reason": "classification 0.91 >= 0.75"
     }
   ],
   "action": "ESCALATE_CREATE_TICKET",

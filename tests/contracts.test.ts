@@ -3,7 +3,12 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { ActionSchema, CustomerRecordSchema, TraceSchema } from '../src/types/index.js';
+import {
+  ActionSchema,
+  CustomerRecordSchema,
+  PreDecisionSchema,
+  TraceSchema,
+} from '../src/types/index.js';
 
 const FIXTURES_DIR = fileURLToPath(new URL('../fixtures', import.meta.url));
 
@@ -33,6 +38,7 @@ describe('fixtures/customers.json', () => {
     ]);
     expect(customers['suspended-us']?.account_status).toBe('suspended');
     expect(customers['plus-us-open-ticket']?.open_ticket_id).not.toBeNull();
+    expect(customers['plus-us-open-ticket']?.open_ticket_intent).toBe('billing_dispute');
   });
 
   it('covers the boundary-relevant transaction shapes', () => {
@@ -94,6 +100,26 @@ describe('fixtures/traces/', () => {
       if (trace.action === 'ROUTE_INCIDENT_MACRO') {
         expect(trace.action_detail.macro_id).toBeDefined();
       }
+      if (trace.confidence.retrieval_strength === null) {
+        // finalize() never ran, so its gates cannot appear in the rule log
+        const ruleNames = trace.rules_evaluated.map((r) => r.rule);
+        expect(ruleNames).not.toContain('retrieval_strength_gate');
+        expect(ruleNames).not.toContain('groundedness_gate');
+      }
+    }
+  });
+});
+
+describe('PreDecision (SPEC §3.4)', () => {
+  const decision = { rules: [], contextRequests: [] };
+
+  it('rejects ANSWER as an evaluate() outcome', () => {
+    expect(PreDecisionSchema.safeParse({ ...decision, outcome: 'ANSWER' }).success).toBe(false);
+  });
+
+  it('accepts terminal pre-actions and ATTEMPT_ANSWER', () => {
+    for (const outcome of ['ESCALATE_CREATE_TICKET', 'ROUTE_INCIDENT_MACRO', 'ATTEMPT_ANSWER']) {
+      expect(PreDecisionSchema.safeParse({ ...decision, outcome }).success).toBe(true);
     }
   });
 });
