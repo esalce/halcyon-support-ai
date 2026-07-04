@@ -1,0 +1,63 @@
+{
+  "turn_id": "turn-0002",
+  "timestamp": "2026-07-04T14:06:47Z",
+  "customer_id": "cust_us_002",
+  "routing": "classified",
+  "customer_context": {
+    "tier": "plus",
+    "region": "US",
+    "account_status": "active",
+    "recent_disputes": 0
+  },
+  "classification": {
+    "intent": "crypto_question",
+    "topic": "crypto",
+    "region_detected": "US",
+    "confidence": 0.91,
+    "entities": {}
+  },
+  "context_injected": [],
+  "kb": {
+    "topic_route": [],
+    "chunks": [],
+    "filters_applied": { "approved": true, "region": "US" }
+  },
+  "confidence": {
+    "classification_confidence": 0.91,
+    "retrieval_strength": null,
+    "groundedness_pass": null
+  },
+  "rules_evaluated": [
+    { "rule": "incident_fast_path", "fired": false, "reason": "no active incident" },
+    { "rule": "ticket_dedup", "fired": false, "reason": "customer has no open ticket" },
+    {
+      "rule": "vip_billing_dispute",
+      "fired": false,
+      "reason": "intent 'crypto_question' is not a billing dispute"
+    },
+    {
+      "rule": "regulated_topic",
+      "fired": false,
+      "reason": "topic 'crypto' is not a regulated topic"
+    },
+    {
+      "rule": "knowledge_gap",
+      "fired": true,
+      "reason": "topic 'crypto' has no entry in the topic-routing table — escalating with full context"
+    },
+    {
+      "rule": "classification_confidence_gate",
+      "fired": false,
+      "reason": "classification 0.91 >= 0.75"
+    }
+  ],
+  "action": "ESCALATE_CREATE_TICKET",
+  "action_detail": { "ticket_id": "ZD-2101" },
+  "llm": {
+    "provider": "anthropic",
+    "model": "claude-sonnet-5",
+    "calls": 1,
+    "latency_ms": 640
+  },
+  "answer_served": null
+}

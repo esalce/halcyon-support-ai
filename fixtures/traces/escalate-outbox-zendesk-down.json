@@ -1,0 +1,65 @@
+{
+  "turn_id": "turn-0006",
+  "timestamp": "2026-07-04T16:02:54Z",
+  "customer_id": "cust_us_003",
+  "routing": "classified",
+  "customer_context": {
+    "tier": "standard",
+    "region": "US",
+    "account_status": "suspended",
+    "recent_disputes": 2
+  },
+  "classification": {
+    "intent": "card_declined",
+    "topic": "card_declined",
+    "region_detected": "US",
+    "confidence": 0.58,
+    "entities": {}
+  },
+  "context_injected": [],
+  "kb": null,
+  "confidence": {
+    "classification_confidence": 0.58,
+    "retrieval_strength": null,
+    "groundedness_pass": null
+  },
+  "rules_evaluated": [
+    { "rule": "incident_fast_path", "fired": false, "reason": "no active incident" },
+    { "rule": "ticket_dedup", "fired": false, "reason": "customer has no open ticket" },
+    {
+      "rule": "vip_billing_dispute",
+      "fired": false,
+      "reason": "standard-tier customer"
+    },
+    {
+      "rule": "regulated_topic",
+      "fired": false,
+      "reason": "topic 'card_declined' is not a regulated topic"
+    },
+    {
+      "rule": "knowledge_gap",
+      "fired": false,
+      "reason": "topic 'card_declined' has a KB route"
+    },
+    {
+      "rule": "classification_confidence_gate",
+      "fired": true,
+      "reason": "classification_confidence 0.58 < 0.75 — evaluate() terminates with escalation before retrieval"
+    }
+  ],
+  "action": "ESCALATE_CREATE_TICKET",
+  "action_detail": {
+    "outbox": {
+      "queued": true,
+      "reason": "zendesk_unreachable",
+      "ref": "OBX-20260704-0001"
+    }
+  },
+  "llm": {
+    "provider": "anthropic",
+    "model": "claude-sonnet-5",
+    "calls": 1,
+    "latency_ms": 705
+  },
+  "answer_served": null
+}

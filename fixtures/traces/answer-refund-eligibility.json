@@ -1,0 +1,86 @@
+{
+  "turn_id": "turn-0001",
+  "timestamp": "2026-07-04T14:02:11Z",
+  "customer_id": "cust_us_001",
+  "routing": "classified",
+  "customer_context": {
+    "tier": "standard",
+    "region": "US",
+    "account_status": "active",
+    "recent_disputes": 0
+  },
+  "classification": {
+    "intent": "refund_request",
+    "topic": "refund",
+    "region_detected": "US",
+    "confidence": 0.93,
+    "entities": { "merchant": "Foodmart", "amount": 42 }
+  },
+  "context_injected": ["matched_txn"],
+  "kb": {
+    "topic_route": ["refund-policy-us"],
+    "chunks": [
+      { "id": "refund-policy-us#eligibility-window", "score": 0.84 },
+      { "id": "refund-policy-us#excluded-products", "score": 0.63 }
+    ],
+    "filters_applied": { "approved": true, "region": "US" }
+  },
+  "confidence": {
+    "classification_confidence": 0.93,
+    "retrieval_strength": 0.84,
+    "groundedness_pass": true
+  },
+  "rules_evaluated": [
+    { "rule": "incident_fast_path", "fired": false, "reason": "no active incident" },
+    { "rule": "ticket_dedup", "fired": false, "reason": "customer has no open ticket" },
+    {
+      "rule": "vip_billing_dispute",
+      "fired": false,
+      "reason": "intent 'refund_request' is not a billing dispute"
+    },
+    {
+      "rule": "regulated_topic",
+      "fired": false,
+      "reason": "topic 'refund' is not a regulated topic"
+    },
+    {
+      "rule": "classification_confidence_gate",
+      "fired": false,
+      "reason": "classification 0.93 >= 0.75"
+    },
+    {
+      "rule": "knowledge_gap",
+      "fired": false,
+      "reason": "topic 'refund' routes to 1 candidate doc"
+    },
+    {
+      "rule": "refund_target_resolution",
+      "fired": true,
+      "reason": "entities (merchant 'Foodmart', amount 42) uniquely matched txn_us1_001 dated 2026-06-28"
+    },
+    {
+      "rule": "refund_eligibility",
+      "fired": true,
+      "reason": "US rule: account active, txn 6 days old <= 30, product 'card_purchase' not excluded — eligible"
+    },
+    {
+      "rule": "retrieval_strength_gate",
+      "fired": false,
+      "reason": "top chunk score 0.84 >= 0.40"
+    },
+    {
+      "rule": "groundedness_gate",
+      "fired": false,
+      "reason": "draft supported by retrieved chunks; no unsupported claims"
+    }
+  ],
+  "action": "ANSWER",
+  "action_detail": {},
+  "llm": {
+    "provider": "anthropic",
+    "model": "claude-sonnet-5",
+    "calls": 3,
+    "latency_ms": 1910
+  },
+  "answer_served": "Good news, Maya — your $42.00 Foodmart charge from June 28 is eligible for a refund. Card purchases can be refunded within 30 days, and this one is 6 days old. Once processed, the credit typically posts within 5-7 business days."
+}

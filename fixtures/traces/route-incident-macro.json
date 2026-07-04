@@ -1,0 +1,36 @@
+{
+  "turn_id": "turn-0005",
+  "timestamp": "2026-07-04T15:40:12Z",
+  "customer_id": "cust_us_001",
+  "routing": "incident_fast_path",
+  "customer_context": {
+    "tier": "standard",
+    "region": "US",
+    "account_status": "active",
+    "recent_disputes": 0
+  },
+  "classification": null,
+  "context_injected": [],
+  "kb": null,
+  "confidence": {
+    "classification_confidence": 0,
+    "retrieval_strength": null,
+    "groundedness_pass": null
+  },
+  "rules_evaluated": [
+    {
+      "rule": "incident_fast_path",
+      "fired": true,
+      "reason": "active incident INC-2026-0704 (card declines): message matched incident keyword 'declined'"
+    }
+  ],
+  "action": "ROUTE_INCIDENT_MACRO",
+  "action_detail": { "macro_id": "macro-inc-2026-0704-card-declines" },
+  "llm": {
+    "provider": "none",
+    "model": "none",
+    "calls": 0,
+    "latency_ms": 0
+  },
+  "answer_served": null
+}

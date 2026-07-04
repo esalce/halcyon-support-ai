@@ -1,0 +1,63 @@
+{
+  "turn_id": "turn-0003",
+  "timestamp": "2026-07-04T14:12:29Z",
+  "customer_id": "cust_us_004",
+  "routing": "classified",
+  "customer_context": {
+    "tier": "plus",
+    "region": "US",
+    "account_status": "active",
+    "recent_disputes": 1
+  },
+  "classification": {
+    "intent": "billing_dispute",
+    "topic": "reg_e_dispute",
+    "region_detected": "US",
+    "confidence": 0.9,
+    "entities": {}
+  },
+  "context_injected": [],
+  "kb": null,
+  "confidence": {
+    "classification_confidence": 0.9,
+    "retrieval_strength": null,
+    "groundedness_pass": null
+  },
+  "rules_evaluated": [
+    { "rule": "incident_fast_path", "fired": false, "reason": "no active incident" },
+    {
+      "rule": "ticket_dedup",
+      "fired": true,
+      "reason": "classification.intent 'billing_dispute' === customer.open_ticket_intent (ticket ZD-1042) — appending as internal note instead of creating a duplicate"
+    },
+    {
+      "rule": "vip_billing_dispute",
+      "fired": true,
+      "reason": "plus-tier customer with a billing dispute"
+    },
+    {
+      "rule": "regulated_topic",
+      "fired": true,
+      "reason": "topic 'reg_e_dispute' is regulated; disclosure already delivered on ZD-1042 — dedup takes precedence over a new ticket"
+    },
+    {
+      "rule": "knowledge_gap",
+      "fired": false,
+      "reason": "not reached: escalation decided before retrieval"
+    },
+    {
+      "rule": "classification_confidence_gate",
+      "fired": false,
+      "reason": "classification 0.90 >= 0.75"
+    }
+  ],
+  "action": "ESCALATE_UPDATE_TICKET",
+  "action_detail": { "ticket_id": "ZD-1042" },
+  "llm": {
+    "provider": "anthropic",
+    "model": "claude-sonnet-5",
+    "calls": 1,
+    "latency_ms": 590
+  },
+  "answer_served": null
+}

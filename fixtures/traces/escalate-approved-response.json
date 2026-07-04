@@ -1,0 +1,59 @@
+{
+  "turn_id": "turn-0004",
+  "timestamp": "2026-07-04T14:18:05Z",
+  "customer_id": "cust_us_002",
+  "routing": "classified",
+  "customer_context": {
+    "tier": "plus",
+    "region": "US",
+    "account_status": "active",
+    "recent_disputes": 0
+  },
+  "classification": {
+    "intent": "billing_dispute",
+    "topic": "reg_e_dispute",
+    "region_detected": "US",
+    "confidence": 0.93,
+    "entities": {}
+  },
+  "context_injected": ["last_disputed_txn"],
+  "kb": null,
+  "confidence": {
+    "classification_confidence": 0.93,
+    "retrieval_strength": null,
+    "groundedness_pass": null
+  },
+  "rules_evaluated": [
+    { "rule": "incident_fast_path", "fired": false, "reason": "no active incident" },
+    { "rule": "ticket_dedup", "fired": false, "reason": "customer has no open ticket" },
+    {
+      "rule": "vip_billing_dispute",
+      "fired": true,
+      "reason": "plus-tier customer with a billing dispute"
+    },
+    {
+      "rule": "regulated_topic",
+      "fired": true,
+      "reason": "topic 'reg_e_dispute' requires verbatim approved language — template 'dispute-rights-us' selected by topic+region"
+    },
+    {
+      "rule": "knowledge_gap",
+      "fired": false,
+      "reason": "not reached: escalation decided before retrieval"
+    },
+    {
+      "rule": "classification_confidence_gate",
+      "fired": false,
+      "reason": "classification 0.93 >= 0.75"
+    }
+  ],
+  "action": "ESCALATE_WITH_APPROVED_RESPONSE",
+  "action_detail": { "ticket_id": "ZD-2102", "template_id": "dispute-rights-us" },
+  "llm": {
+    "provider": "anthropic",
+    "model": "claude-sonnet-5",
+    "calls": 1,
+    "latency_ms": 610
+  },
+  "answer_served": "Daniel, we've opened a dispute for the $58.20 charge at TechnoMart on June 30, 2026. Under Regulation E, we will investigate and report the results within 10 business days of receiving your dispute. If we need more time, we may take up to 45 days, in which case your account will be provisionally credited within 10 business days. You will receive a written explanation of our findings. A specialist has been assigned to ticket ZD-2102."
+}
