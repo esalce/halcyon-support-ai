@@ -1,0 +1,65 @@
+{
+  "turn_id": "turn-0001",
+  "timestamp": "2026-07-04T14:02:11Z",
+  "customer_id": "cust_us_001",
+  "routing": "classified",
+  "customer_context": {
+    "tier": "standard",
+    "region": "US",
+    "account_status": "active",
+    "recent_disputes": 0
+  },
+  "classification": {
+    "intent": "paycheck_timing",
+    "topic": "paycheck_timing",
+    "region_detected": "US",
+    "confidence": 0.94
+  },
+  "context_injected": ["next_deposit_date"],
+  "kb": {
+    "topic_route": ["paycheck-timing"],
+    "chunks": [
+      { "id": "paycheck-timing#deposit-schedule", "score": 0.82 },
+      { "id": "paycheck-timing#early-deposit-plus", "score": 0.61 }
+    ],
+    "filters_applied": { "approved": true, "region": "US" }
+  },
+  "confidence": {
+    "classification_confidence": 0.94,
+    "retrieval_strength": 0.82,
+    "groundedness_pass": true
+  },
+  "rules_evaluated": [
+    { "rule": "incident_fast_path", "fired": false, "reason": "no active incident" },
+    { "rule": "ticket_dedup", "fired": false, "reason": "customer has no open ticket" },
+    {
+      "rule": "vip_billing_dispute",
+      "fired": false,
+      "reason": "intent 'paycheck_timing' is not a billing dispute"
+    },
+    {
+      "rule": "regulated_topic",
+      "fired": false,
+      "reason": "topic 'paycheck_timing' is not a regulated topic"
+    },
+    {
+      "rule": "knowledge_gap",
+      "fired": false,
+      "reason": "topic 'paycheck_timing' routes to 1 candidate doc"
+    },
+    {
+      "rule": "confidence_gate",
+      "fired": false,
+      "reason": "all signals pass: classification 0.94 >= 0.75, retrieval 0.82 >= 0.40, groundedness pass"
+    }
+  ],
+  "action": "ANSWER",
+  "action_detail": {},
+  "llm": {
+    "provider": "anthropic",
+    "model": "claude-sonnet-5",
+    "calls": 3,
+    "latency_ms": 1840
+  },
+  "answer_served": "Hi Maya — your next paycheck is scheduled to arrive on July 10. Direct deposits post by 9am ET on the scheduled date. If your employer sends the deposit early, it will appear as soon as we receive it."
+}

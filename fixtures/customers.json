@@ -1,0 +1,192 @@
+{
+  "standard-us": {
+    "customer_id": "cust_us_001",
+    "first_name": "Maya",
+    "tier": "standard",
+    "account_status": "active",
+    "region": "US",
+    "signup_date": "2025-03-15",
+    "open_ticket_id": null,
+    "recent_disputes": 0,
+    "transactions": [
+      {
+        "txn_id": "txn_us1_001",
+        "merchant": "Foodmart",
+        "amount": 42.0,
+        "date": "2026-06-28",
+        "product_type": "card_purchase",
+        "disputed": false
+      },
+      {
+        "txn_id": "txn_us1_002",
+        "merchant": "Rivera Hardware",
+        "amount": 67.5,
+        "date": "2026-06-05",
+        "product_type": "card_purchase",
+        "disputed": false
+      },
+      {
+        "txn_id": "txn_us1_003",
+        "merchant": "First Meridian Escrow",
+        "amount": 2500.0,
+        "date": "2026-06-20",
+        "product_type": "wire_transfer",
+        "disputed": false
+      }
+    ],
+    "next_deposit_date": "2026-07-10"
+  },
+  "plus-us": {
+    "customer_id": "cust_us_002",
+    "first_name": "Daniel",
+    "tier": "plus",
+    "account_status": "active",
+    "region": "US",
+    "signup_date": "2024-11-02",
+    "open_ticket_id": null,
+    "recent_disputes": 0,
+    "transactions": [
+      {
+        "txn_id": "txn_us2_001",
+        "merchant": "TechnoMart",
+        "amount": 58.2,
+        "date": "2026-06-30",
+        "product_type": "card_purchase",
+        "disputed": true
+      },
+      {
+        "txn_id": "txn_us2_002",
+        "merchant": "CoinPort",
+        "amount": 300.0,
+        "date": "2026-06-25",
+        "product_type": "crypto",
+        "disputed": false
+      },
+      {
+        "txn_id": "txn_us2_003",
+        "merchant": "Cafe Lumen",
+        "amount": 12.8,
+        "date": "2026-06-14",
+        "product_type": "card_purchase",
+        "disputed": false
+      }
+    ],
+    "next_deposit_date": "2026-07-15"
+  },
+  "standard-uk": {
+    "customer_id": "cust_uk_001",
+    "first_name": "Priya",
+    "tier": "standard",
+    "account_status": "active",
+    "region": "UK",
+    "signup_date": "2025-07-22",
+    "open_ticket_id": null,
+    "recent_disputes": 0,
+    "transactions": [
+      {
+        "txn_id": "txn_uk1_001",
+        "merchant": "Tesco Express",
+        "amount": 23.4,
+        "date": "2026-06-21",
+        "product_type": "card_purchase",
+        "disputed": false
+      },
+      {
+        "txn_id": "txn_uk1_002",
+        "merchant": "EuroRemit",
+        "amount": 450.0,
+        "date": "2026-06-27",
+        "product_type": "international_transfer",
+        "disputed": false
+      }
+    ],
+    "next_deposit_date": "2026-07-31"
+  },
+  "plus-uk": {
+    "customer_id": "cust_uk_002",
+    "first_name": "Oliver",
+    "tier": "plus",
+    "account_status": "active",
+    "region": "UK",
+    "signup_date": "2023-05-09",
+    "open_ticket_id": null,
+    "recent_disputes": 0,
+    "transactions": [
+      {
+        "txn_id": "txn_uk2_001",
+        "merchant": "Waterstones",
+        "amount": 31.99,
+        "date": "2026-06-18",
+        "product_type": "card_purchase",
+        "disputed": false
+      },
+      {
+        "txn_id": "txn_uk2_002",
+        "merchant": "Pret A Manger",
+        "amount": 8.75,
+        "date": "2026-07-01",
+        "product_type": "card_purchase",
+        "disputed": false
+      }
+    ],
+    "next_deposit_date": "2026-07-28"
+  },
+  "suspended-us": {
+    "customer_id": "cust_us_003",
+    "first_name": "Trevor",
+    "tier": "standard",
+    "account_status": "suspended",
+    "region": "US",
+    "signup_date": "2026-01-19",
+    "open_ticket_id": null,
+    "recent_disputes": 2,
+    "transactions": [
+      {
+        "txn_id": "txn_us3_001",
+        "merchant": "QuickBet Online",
+        "amount": 120.0,
+        "date": "2026-06-29",
+        "product_type": "card_purchase",
+        "disputed": false
+      },
+      {
+        "txn_id": "txn_us3_002",
+        "merchant": "CoinPort",
+        "amount": 900.0,
+        "date": "2026-06-26",
+        "product_type": "crypto",
+        "disputed": false
+      }
+    ],
+    "next_deposit_date": null
+  },
+  "plus-us-open-ticket": {
+    "customer_id": "cust_us_004",
+    "first_name": "Alicia",
+    "tier": "plus",
+    "account_status": "active",
+    "region": "US",
+    "signup_date": "2024-03-30",
+    "open_ticket_id": "ZD-1042",
+    "recent_disputes": 1,
+    "transactions": [
+      {
+        "txn_id": "txn_us4_001",
+        "merchant": "GadgetHub",
+        "amount": 214.99,
+        "date": "2026-06-29",
+        "product_type": "card_purchase",
+        "disputed": true
+      },
+      {
+        "txn_id": "txn_us4_002",
+        "merchant": "Foodmart",
+        "amount": 36.1,
+        "date": "2026-06-22",
+        "product_type": "card_purchase",
+        "disputed": false
+      }
+    ],
+    "next_deposit_date": "2026-07-15"
+  }
+}
