@@ -63,12 +63,14 @@ export const ClassificationSchema = z.object({
 export type Classification = z.infer<typeof ClassificationSchema>;
 
 /**
- * SPEC §3.2 — the three gate signals. null means "this stage did not run"
- * (fast-path and LLM-down turns never classify; escalate-before-retrieval
- * turns never retrieve or draft), which is distinct from a failing score.
+ * SPEC §3.2 — the three gate signals. classification_confidence is always
+ * numeric so the §5 gate stays a plain `< T_cls` comparison; turns with no
+ * LLM self-report (incident fast-path, LLM-down fallback) carry 0, which is
+ * maximally conservative under the gate. For the other two signals, null
+ * means "this stage did not run", distinct from a failing score.
  */
 export const ConfidenceSignalsSchema = z.object({
-  classification_confidence: z.number().min(0).max(1).nullable(),
+  classification_confidence: z.number().min(0).max(1),
   retrieval_strength: z.number().nullable(),
   groundedness_pass: z.boolean().nullable(),
 });

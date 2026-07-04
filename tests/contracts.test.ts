@@ -75,6 +75,8 @@ describe('fixtures/traces/', () => {
         expect(trace.classification).toBeNull();
         expect(trace.llm.calls).toBe(0);
         expect(trace.action).toBe('ROUTE_INCIDENT_MACRO');
+        // no LLM self-report: 0 is the conservative sentinel, never null
+        expect(trace.confidence.classification_confidence).toBe(0);
       } else {
         expect(trace.classification).not.toBeNull();
         expect(trace.confidence.classification_confidence).toBe(
