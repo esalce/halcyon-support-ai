@@ -199,8 +199,12 @@ interface PolicyEngine {
   finalize(pre: PreDecision, confidence: ConfidenceSignals): FinalDecision;
 }
 
+// ANSWER is deliberately excluded: only finalize() can produce it, so no answer can
+// reach the dispatcher without passing the retrieval + groundedness gates.
+type TerminalPreAction = Exclude<Action, 'ANSWER'>;
+
 interface PreDecision {
-  outcome: Action | 'ATTEMPT_ANSWER';   // terminal action, or proceed to retrieve/draft
+  outcome: TerminalPreAction | 'ATTEMPT_ANSWER';
   rules: RuleResult[];
   template_id?: string;                 // set when outcome = ESCALATE_WITH_APPROVED_RESPONSE
   contextRequests: string[];            // scoped injections the LLM may receive (Q5)
