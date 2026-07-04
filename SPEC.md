@@ -66,7 +66,9 @@ interface CustomerRecord {
   account_status: 'active' | 'suspended' | 'closed';
   region: 'US' | 'UK';
   signup_date: string;            // ISO
-  open_ticket_id: string | null;  // drives create-vs-update dedup
+  open_ticket_id: string | null;      // drives create-vs-update dedup
+  open_ticket_intent: string | null;  // intent of that ticket, synced at context load —
+                                      // lets the pure policy engine dedup without I/O
   recent_disputes: number;
   // deterministic-only fields (policy engine may read; NEVER interpolated into prompts):
   transactions: Transaction[];
@@ -84,6 +86,28 @@ interface Classification {
   topic: string;                  // maps into TOPIC_ROUTING table
   region_detected: 'US' | 'UK' | 'unknown';
   confidence: number;             // self-reported, 0–1; one of three gate signals
+  entities: {                     // extracted references, resolved deterministically later —
+    merchant?: string;            // e.g. "refund my $42 Foodmart charge" →
+    amount?: number;              //   { merchant: 'Foodmart', amount: 42 }
+    approx_date?: string;
+  };
+}
+
+interface Msg { role: 'customer' | 'assistant'; content: string; }
+
+interface Chunk {
+  id: string;                     // `${doc_id}#${heading-slug}`
+  doc_id: string;
+  heading: string;
+  text: string;
+  region: 'US' | 'UK' | 'ALL';
+}
+
+interface OutageStatus {
+  active: boolean;
+  incident_id: string | null;
+  keywords: string[];             // incident-scoped; fast-path armed only while active
+  macro_id: string | null;
 }
 
 interface ConfidenceSignals {
@@ -163,12 +187,27 @@ interface Zendesk {
 }
 
 // WS3 implements — PURE FUNCTIONS ONLY, no I/O, no LLM. This file is the code-review centerpiece.
+// Two-phase, because retrieval_strength and groundedness_pass don't exist until after
+// retrieval + drafting: evaluate() rules on everything knowable pre-retrieval and either
+// terminates or returns ATTEMPT_ANSWER; finalize() applies the remaining confidence gates
+// to the completed draft. Both are pure; the orchestrator owns the I/O between them.
 interface PolicyEngine {
   evaluate(input: {
     customer: CustomerRecord; classification: Classification;
-    confidence: ConfidenceSignals; kbMatch: boolean; outage: OutageStatus;
-  }): { action: Action; rules: RuleResult[]; template_id?: string; contextRequests: string[] };
+    kbMatch: boolean; outage: OutageStatus;
+  }): PreDecision;
+  finalize(pre: PreDecision, confidence: ConfidenceSignals): FinalDecision;
 }
+
+interface PreDecision {
+  outcome: Action | 'ATTEMPT_ANSWER';   // terminal action, or proceed to retrieve/draft
+  rules: RuleResult[];
+  template_id?: string;                 // set when outcome = ESCALATE_WITH_APPROVED_RESPONSE
+  contextRequests: string[];            // scoped injections the LLM may receive (Q5)
+  matched_txn_id?: string | null;       // refund flows: deterministically resolved target txn
+}
+
+interface FinalDecision { action: Action; rules: RuleResult[]; template_id?: string; }
 ```
 
 ### 3.5 Fixtures (unblock UI + evals before the pipeline exists)
@@ -185,11 +224,15 @@ message
   → [incident fast-path check: ONLY if outage_status.active — keywords come from the
      incident record itself; armed only during incidents → ROUTE_INCIDENT_MACRO, done]
   → classify (LLM, structured output)
-  → load customer context (mock Salesforce)                 [fails → no-context mode]
-  → policy engine (pure, deterministic)
-      → may request scoped context injection (per-intent, minimized — e.g. one txn, not history)
-      → if answer allowed: retrieve (topic route → approved+region filter → rerank) → draft → groundedness check
-  → action dispatcher (executes from the policy decision, never from LLM output)
+  → load customer context (mock Salesforce; includes open_ticket_id + open_ticket_intent)
+                                                            [fails → no-context mode]
+  → policy engine .evaluate() (pure)
+      → terminal outcome (escalate / template / route / dedup-update) → dispatcher
+      → or ATTEMPT_ANSWER, with scoped context requests (per-intent, minimized)
+        → retrieve (topic route → approved+region filter → rerank) → draft → groundedness check
+        → policy engine .finalize() (pure) applies retrieval + groundedness gates
+            → ANSWER, or downgrade to ESCALATE_CREATE_TICKET (low_confidence)
+  → action dispatcher (executes only the policy decision, never LLM output)
   → emit Trace
 ```
 
@@ -208,8 +251,20 @@ Escalation (unchanged from v1): VIP(plus)+billing_dispute; regulated topics {reg
 Refund eligibility (unchanged): US = active + ≤30d + product ∉ {wire_transfer, crypto}; UK = active + ≤14d (FCA cooling-off) + product ∉ {international_transfer}.
 
 **New rules:**
-- **Ticket dedup (Q6):** classification intent matches the intent of `open_ticket_id`'s ticket → ESCALATE_UPDATE_TICKET (append as internal note, bump priority if warranted; customer gets a status acknowledgment). New intent → new ticket.
-- **Confidence gate (Q11):** escalate if `classification_confidence < T_cls` OR `retrieval_strength < T_ret` OR `groundedness_pass === false`. **Thresholds are outputs of the eval sweep, not inputs** — sweep on golden set, plot containment vs. recall, pick max containment where recall = 1.0. (Stretch: put the sweep chart on a slide.)
+- **Ticket dedup (Q6):** `classification.intent === customer.open_ticket_intent` (synced onto the
+  customer record at context load, so the pure engine needs no I/O) → ESCALATE_UPDATE_TICKET
+  (append as internal note, bump priority if warranted; customer gets a status acknowledgment).
+  New intent → new ticket.
+- **Confidence gate (Q11), split across the two phases:** `evaluate()` escalates if
+  `classification.confidence < T_cls`; `finalize()` downgrades ATTEMPT_ANSWER to escalate if
+  `retrieval_strength < T_ret` OR `groundedness_pass === false`. **Thresholds are outputs of the
+  eval sweep, not inputs** — sweep on golden set, plot containment vs. recall, pick max
+  containment where recall = 1.0. (Stretch: put the sweep chart on a slide.)
+- **Refund target resolution (pure):** the classifier extracts `entities` (merchant/amount/date
+  mentions); a deterministic matcher resolves them against `customer.transactions`. Unique
+  match → evaluate eligibility on that txn (`matched_txn_id` in the PreDecision, and it becomes
+  the scoped context injection). No match or ambiguous → escalate with reason
+  `txn_unresolved` — the engine never guesses which charge the customer means.
 - **Scoped context injection (Q5):** the policy engine decides per-intent what enrichment the LLM may see (`contextRequests`), fetched by deterministic code, minimized (one txn: merchant/date/amount; next deposit date — never full history, never balances/PII). Injections are listed in `trace.context_injected`.
 
 ---
@@ -280,7 +335,7 @@ Docs: paycheck-timing, card-declined, refund-policy-us, refund-policy-uk, disput
 |---|---|---|---|---|
 | **A — Mocks** | Salesforce lookup, Zendesk stubs w/ `updateTicket` + `available` flag + **outbox worker w/ backoff + idempotency**, outage status w/ incident keyword list | `src/mocks/` | Types only | Outbox demonstrably queues + retries when `available=false`; all stubs log payloads |
 | **B — KB + retrieval** | 10 md files w/ frontmatter, 2 approved templates, topic-routing table, frontmatter filter, heading chunker, embedding rerank (BM25 fallback behind same interface) | `src/mocks/kb/`, `src/pipeline/retrieval.ts` | Types only | Gap topic returns empty route; `approved:false` doc never retrieved; UK customer never gets US-only chunks |
-| **C — Policy engine** | All rules as **pure functions + unit tests** (fires/not/boundary per rule), template selection, dedup rule, context-request logic | `src/pipeline/policy-engine.ts` + tests | Types only | 100% of rules unit-tested incl. boundaries; zero imports of I/O or LLM code |
+| **C — Policy engine** | Both phases (`evaluate` + `finalize`) as **pure functions + unit tests** (fires/not/boundary per rule), template selection, dedup rule, txn resolution, context-request logic | `src/pipeline/policy-engine.ts` + tests | Types only | 100% of rules unit-tested incl. boundaries and both finalize gates; zero imports of I/O or LLM code |
 | **D — LLM layer** | `LLMProvider` impl (structured-output classify, draft w/ allowlist-only interpolation, binary groundedness), timeout+retry, provider/model/latency into trace | `src/pipeline/llm.ts` | Types only | Classify returns valid `Classification` on all fixture messages; groundedness returns unsupported-claims list |
 | **E — Orchestrator** | Pipeline glue per §4, dispatcher, trace assembly, **CLI runner** (`npm run cli -- --customer plus-us "message"` prints full trace) | `src/pipeline/index.ts`, `src/cli.ts` | A+B+C+D | End-to-end conversation → complete valid Trace from CLI, before any UI |
 | **F — UI** | Three views + controls, developed **against `fixtures/traces/`**, then wired to E | `src/ui/` | Types+fixtures; E to wire | Every fixture trace renders correctly; toggles drive live pipeline after wiring |
@@ -327,6 +382,10 @@ Docs: paycheck-timing, card-declined, refund-policy-us, refund-policy-uk, disput
 | Q14 | Pre-run evals; 50–60 structured cases; gate-not-proof | Shadow mode certifies; evals gate regressions |
 | Q15 | OpsTab reduces over traces | One trace substrate, three audiences |
 | Q16 | Frontmatter governance enforced in retrieval | "Approved knowledge" is a pipeline gate, not a vibe |
+| CR1 | Msg/Chunk/OutageStatus defined in §3 | Contracts must be compile-ready; no shape invented locally by a workstream |
+| CR2 | Two-phase policy engine (evaluate → finalize) | Confidence gates run when their signals exist; both phases stay pure |
+| CR3 | open_ticket_intent synced onto CustomerRecord | Dedup stays a pure rule — no I/O from the policy engine |
+| CR4 | Classifier extracts entities; deterministic txn matcher, never guesses | Ambiguous refund target → escalate, not a coin flip on the wrong charge |
 
 **Launch plan, gates, hypercare, tradeoffs:** carry over from v1 spec (milestones 0–5, gates incl. recall=1.0 + P95 ≤3s — note: answer path is 3 LLM calls, groundedness check must be a small/fast model), plus shadow-mode framing from Q14.
 
